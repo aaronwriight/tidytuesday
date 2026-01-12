@@ -56,16 +56,16 @@ My contributions to the [#TidyTuesday challenge](https://github.com/rfordatascie
 Use the included script `new-viz-from-template.sh` to generate a new visualization from the template (from the top-level directory):
 
 ```bash
-# Usage: ./scripts/new-viz-from-template.sh <date> <week> <language> <title>
+# Usage: ./new-viz-from-template.sh <date> <week> <language> <title>
 
 # Create a new R analysis
-./scripts/new-viz-from-template.sh 2025-07-22 29 r "MTA Permanent Art Catalog"
+./new-viz-from-template.sh 2025-07-22 29 r "MTA Permanent Art Catalog"
 
 # Create a new Python analysis  
-./scripts/new-viz-from-template.sh 2025-01-09 2 python "posit::conf talks"
+./new-viz-from-template.sh 2025-01-09 2 python "posit::conf talks"
 
 # Example with single-word title
-./scripts/new-viz-from-template.sh 2024-09-24 39 r "Olympiad"
+./new-viz-from-template.sh 2024-09-24 39 r "Olympiad"
 ```
 
 **Arguments:**
@@ -144,28 +144,23 @@ quarto preview
 ├── challenges/               # Challenge folders by year and week
 │   └── 2025/
 │       └── 2025-07-22_29_MTA_Permanent_Art_Catalog/
-│           ├── data/
-│           ├── r/ | python/  # R or Python analysis
-│           │   └── 2025-07-22_29_MTA_Permanent_Art_Catalog.qmd
-│           └── viz
-│               └── gif/
-│                   ├── frames/
-│                   └── viz.gif
+│           └── r/ | python/  # R or Python analysis
+│               ├── 2025-07-22_29_MTA_Permanent_Art_Catalog.qmd
+│               ├── data/
+│               ├── gif/
+│               ├── plots/
+│               └── images/
+├── load_tidytuesday_data.py  # Script to load TidyTuesday data in Python-based .qmds
+├── load_tidytuesday_data.R   # Script to load TidyTuesday data in R-based .qmds
+├── new-viz-from-template.sh  # Script to create a new project
 ├── _quarto.yml               # Quarto configuration
 ├── README.md                 # Project README
 ├── references.bib            # Bibliography file for citations
 ├── renv/                     # R environment directory
 ├── renv.lock                 # R package lockfile
-├── scripts/
-│   ├── load_tidytuesday_data.py  # Script to load TidyTuesday data in Python-based .qmds
-│   ├── load_tidytuesday_data.R   # Script to load TidyTuesday data in R-based .qmds
-│   ├── mcc.R
-│   ├── new-viz-from-template.sh  # Script to create a new project
-│   ├── setup-dev.sh              # Development setup script
-│   ├── template.qmd              # Starter Quarto template
-│   └── viz_aesthetics.R
+├── setup-dev.sh              # Development setup script
 ├── _site/                    # Quarto rendered website (ignored)
-├── tidytuesday.Rproj          # TidyTuesday .Rproj file
+├── template.qmd              # Starter Quarto template
 ├── tidytuesdayR.pdf          # TidyTuesday cheat sheet
 ├── .venv/                    # Python virtual environment (ignored)
 ├── _quarto.yml               # Quarto configuration

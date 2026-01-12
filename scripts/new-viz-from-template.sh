@@ -1,13 +1,17 @@
 #!/bin/bash
 
 # Script to create a new TidyTuesday visualization from template
-# Usage: ./new-viz-from-template.sh <date> <week> <language> <title>
-# Example: ./new-viz-from-template.sh 2024-12-10 12 r "Coffee Data Analysis"
+# Usage: ./scripts/new-viz-from-template.sh <date> <week> <language> <title>
+# Example: ./scripts/new-viz-from-template.sh 2024-12-10 12 r "Coffee Data Analysis"
 # Creates structure: challenges/YYYY/YYYY-MM-DD_WW_Title/language/YYYY-MM-DD_WW_Title.qmd
 
 set -e
 
-#
+# find the directory where this script lives and treat its parent as project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="${SCRIPT_DIR}/.."
+YAML_FILE="${ROOT_DIR}/_quarto.yml"
+
 # Check arguments
 if [ $# -ne 4 ]; then
     echo "Usage: $0 <date> <week> <language> <title>"
@@ -30,11 +34,15 @@ printf -v WEEK_PAD "%02d" $WEEK_NUM
 # sanitize title
 TITLE_SAFE=$(echo "$TITLE" | sed -E 's/[^a-zA-Z0-9]+/_/g' | sed -E 's/^_+|_+$//g')
 
-# define directories and filenames
+# define directories and filenames (relative, for quarto)
 WEEK_DIR="${DATE}_${WEEK_PAD}_${TITLE_SAFE}"
-CHALLENGE_DIR="challenges/${YEAR}/${WEEK_DIR}"
-LANG_DIR="${CHALLENGE_DIR}/${LANGUAGE}"
-QMD_FILE="${LANG_DIR}/${WEEK_DIR}.qmd"
+CHALLENGE_DIR_REL="challenges/${YEAR}/${WEEK_DIR}"
+LANG_DIR_REL="${CHALLENGE_DIR_REL}/${LANGUAGE}"
+QMD_FILE_REL="${LANG_DIR_REL}/${WEEK_DIR}.qmd"
+
+# absolute paths on disk
+LANG_DIR="${ROOT_DIR}/${LANG_DIR_REL}"
+QMD_FILE="${ROOT_DIR}/${QMD_FILE_REL}"
 
 # Create directories
 mkdir -p "$LANG_DIR"
@@ -45,7 +53,7 @@ if [ -f "$QMD_FILE" ]; then
 fi
 
 # Copy template and replace placeholders
-cp template.qmd "$QMD_FILE"
+cp "${SCRIPT_DIR}/template.qmd" "$QMD_FILE"
 
 # Replace placeholders based on OS
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -105,30 +113,34 @@ fi
 # Add the new file to _quarto.yml contents
 if [ "$LANGUAGE" = "r" ]; then
     # Add to R Projects section
-    if grep -q "R Projects" _quarto.yml; then
+    if grep -q "R Projects" "$YAML_FILE"; then
         # Find the last R project line and add after it
-        LAST_R_LINE=$(grep -n "r/.*\.qmd" _quarto.yml | tail -1 | cut -d: -f1)
-        if [ ! -z "$LAST_R_LINE" ]; then
-            sed -i "${LAST_R_LINE}a\\            - ${QMD_FILE}" _quarto.yml
+        LAST_R_LINE=$(grep -n "r/.*\.qmd" "$YAML_FILE" | tail -1 | cut -d: -f1)
+        if [ -n "$LAST_R_LINE" ]; then
+            sed -i '' "${LAST_R_LINE}a\\
+            - ${QMD_FILE_REL}" "$YAML_FILE"
         else
             # If no R files found, add after the R Projects contents line
-            R_CONTENTS_LINE=$(grep -n "R Projects" _quarto.yml | cut -d: -f1)
+            R_CONTENTS_LINE=$(grep -n "R Projects" "$YAML_FILE" | cut -d: -f1)
             R_CONTENTS_LINE=$((R_CONTENTS_LINE + 2))
-            sed -i "${R_CONTENTS_LINE}a\\            - ${QMD_FILE}" _quarto.yml
+            sed -i '' "${R_CONTENTS_LINE}a\\
+            - ${QMD_FILE_REL}" "$YAML_FILE"
         fi
     fi
 else
     # Add to Python Projects section
-    if grep -q "Python Projects" _quarto.yml; then
+    if grep -q "Python Projects" "$YAML_FILE"; then
         # Find the last Python project line and add after it
-        LAST_PY_LINE=$(grep -n "python/.*\.qmd" _quarto.yml | tail -1 | cut -d: -f1)
-        if [ ! -z "$LAST_PY_LINE" ]; then
-            sed -i "${LAST_PY_LINE}a\\            - ${QMD_FILE}" _quarto.yml
+        LAST_PY_LINE=$(grep -n "python/.*\.qmd" "$YAML_FILE" | tail -1 | cut -d: -f1)
+        if [ -n "$LAST_PY_LINE" ]; then
+            sed -i '' "${LAST_PY_LINE}a\\
+            - ${QMD_FILE_REL}" "$YAML_FILE"
         else
             # If no Python files found, add after the Python Projects contents line
-            PY_CONTENTS_LINE=$(grep -n "Python Projects" _quarto.yml | cut -d: -f1)
+            PY_CONTENTS_LINE=$(grep -n "Python Projects" "$YAML_FILE" | cut -d: -f1)
             PY_CONTENTS_LINE=$((PY_CONTENTS_LINE + 2))
-            sed -i "${PY_CONTENTS_LINE}a\\            - ${QMD_FILE}" _quarto.yml
+            sed -i '' "${PY_CONTENTS_LINE}a\\
+            - ${QMD_FILE_REL}" "$YAML_FILE"
         fi
     fi
 fi

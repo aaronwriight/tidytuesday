@@ -1,10 +1,10 @@
 ---
-title: "Netflix Views"
-subtitle: "TidyTuesday 2025-07-29"
-date: "2025-07-29"
-author: "Aaron Wright"
-categories: [r, ggplot2, tidyverse, data-viz]
-image: "plot.svg"
+title: "{{TITLE}}"
+subtitle: "TidyTuesday {{DATE}}"
+date: "{{DATE}}"
+author: "Aaron Wright [`aawva@mit.edu`]"
+categories: [{{LANGUAGE}}, {{CATEGORIES}}]
+image: "{{IMAGE_FILE}}"
 ---
 
 <!-- THEMATICS AND RENDERING -->
@@ -44,9 +44,11 @@ a:hover {
 
 ## Overview
 ---
-This week's TidyTuesday challenge focused on [DATASET_DESCRIPTION]. I explored [KEY_INSIGHTS] using r to [VISUALIZATION_APPROACH], asking [RESEARCH_QUESTION]
+**Research Question:** {{RESEARCH_QUESTION}}
 
-> **Key Libraries**: ggplot2, dplyr, tidyr <br>
+This week's TidyTuesday challenge focused on [DATASET_DESCRIPTION]. I explored [KEY_INSIGHTS] using {{LANGUAGE}} to [VISUALIZATION_APPROACH], asking [RESEARCH_QUESTION]
+
+> **Key Libraries**: {{KEY_LIBRARIES}} <br>
 
 <!-- ENVIRONMENT & DATA -->
 
@@ -55,31 +57,39 @@ This week's TidyTuesday challenge focused on [DATASET_DESCRIPTION]. I explored [
 The dataset for this week included [DATASET_FEATURES].
 
 > **Source:** [Info](Link) <br>
-> **Article:** [What We Watched the First Half of 2025](https://about.netflix.com/en/news/what-we-watched-the-first-half-of-2025) <br>
+> **Article:** [Info](Link) <br>
 
-### Import
-```{r}
-#| label: load-data
+### Environment
+```{{{LANGUAGE_CODE}}}
+#| label: environment
 #| message: false
 #| warning: false
 
 # Load required libraries
+{{LIBRARY_IMPORTS}}
 library(tidytuesdayR)
 library(tidyverse)
 library(here)
-library(readxl)
-library(janitor)
+library(camcorder)
+source("scripts/viz_aesthetics.R") # personal aesthetics
+import pydytuesday
 
-# Get data (script provided by tidytuesday community)
+# Get data
+{{GET_DATA}}
+
 # R
-source("load_tidytuesday_data.R")
-tidytuesday_data <- prepare_tidytuesday_data("2025-07-29")
+source("scripts/load_tidytuesday_data.R")
+tidytuesday_data <- prepare_tidytuesday_data("{{DATE}}")
+
+# python
+from scripts/load_tidytuesday_data import prepare_tidytuesday_data
+data = prepare_tidytuesday_data("{{DATE}}")
 
 ```
 
 ### Structure
 
-```{r}
+```{{{LANGUAGE_CODE}}}
 #| label: explore-data
 
 # Examine the dataset
@@ -92,33 +102,50 @@ tidytuesday_data <- prepare_tidytuesday_data("2025-07-29")
 ---
 ### Cleaning
 
-```{r}
+```{{{LANGUAGE_CODE}}}
 #| label: prep-data
 
 # Clean and prepare the data
-
+{{DATA_PREPARATION}}
 ```
 
-## Plotting
+## Visualization
 ---
 
-```{r}
-#| label: main-plot
+```{{{LANGUAGE_CODE}}}
+#| label: camcorder start
+#| include: false
+
+# initialize camcorder for plotting gif
+gg_record(
+  dir = here("challenges", "2026", "2026-01-11_01_Northeast_115_4000-footers", "viz", "gif"), # where to save the recording (folder)
+  device = "png", # device to use to save images
+  width = 4,      # width of saved image
+  height = 6,     # height of saved image
+  units = "in",   # units for width and height
+  dpi = 300       # dpi to use when saving image
+)
+```
+
+```{{{LANGUAGE_CODE}}}
+#| label: visualization
 #| fig-width: 12
 #| fig-height: 8
 #| warning: false
 
 # Create the main visualization
 {{MAIN_VISUALIZATION}}
+
 ```
+
 <!-- VISUALIZATION & COMMENTARY -->
 
 ## Technical Summary
 ---
 - **Data Source**: [TidyTuesday GitHub Repository](https://github.com/rfordatascience/tidytuesday)
-- **Analysis Date**: 2025-07-29
-- **Tools Used**: R, ggplot2, tidyverse
-- **Key Libraries**: ggplot2, dplyr, tidyr
+- **Analysis Date**: {{DATE}}
+- **Tools Used**: {{TOOLS_USED}}
+- **Key Libraries**: {{KEY_LIBRARIES}}
 
 ## Vizualization
 ---

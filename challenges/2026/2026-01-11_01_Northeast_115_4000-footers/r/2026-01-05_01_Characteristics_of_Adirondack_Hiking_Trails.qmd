@@ -1,0 +1,267 @@
+---
+title: "Northeast '115' 4000-footers"
+subtitle: "TidyTuesday 2026-01-11"
+date: "2026-01-11"
+author: "Aaron Wright [`aawva@mit.edu`]"
+categories: [r, ggplot2, tidyverse, data-viz]
+image: "plot.svg"
+---
+
+<!-- THEMATICS AND RENDERING -->
+
+::: cell
+
+```{=html}
+<style>
+/* inline code */
+code {
+  background-color: #f5f5f5;
+  color: #859901; /* solarized green */
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-family: monospace;
+  font-size: 0.95em;
+}
+
+/* list item spacing for inline code */
+li code {
+  margin-left: 2px;
+}
+
+/* link styling */
+a {
+  color: #2AA198; /* solarized cyan */
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+</style>
+```
+:::
+
+<!-- CONFIGURATION -->
+
+## Overview
+---
+**Research Question:** {{RESEARCH_QUESTION}}
+
+Do climbers favor tall peaks, prominent peaks, or just accessible ones?
+How do elevation distributions differ by range within the same state?
+
+This week's TidyTuesday challenge focused on [DATASET_DESCRIPTION]. I explored [KEY_INSIGHTS] using r to [VISUALIZATION_APPROACH], asking [RESEARCH_QUESTION]
+
+> **Key Libraries**: ggplot2, dplyr, tidyr <br>
+
+<!-- ENVIRONMENT & DATA -->
+
+## Dataset
+---
+The dataset for this week included [DATASET_FEATURES].
+
+**Elevation vs. prominence:**
+Elevation refers to how high a peak rests above sea level (absolute measure), while prominence denotes how much it sticks up compared to the surrounding terrain (relative measure). E.g., elevation would signal a building’s total height, and prominence would capture how much taller it is than the buildings surrounding it.
+
+```
+ne115 dataset
+- peak — official summit name
+- rank_ne — AMC ordering of peaks by elevation (1 = highest)
+- rank_state - relative within-state ranking
+- rank_range - relative within-region ranking
+- state — US state in which the peak resides
+- range — mountain range containing the peak (e.g., Adirondacks, Whites, Greens)
+- ascents — number of recorded ascents (typically from list registries, guidebook logs, or community reports)
+- elevation_ft — summit elevation (feet above sea level)
+- elevation_m — summit elevation (meters above sea level)
+- prominence_ft — vertical rise of the peak, relative to the lowest contour connecting it to a higher peak (feet)
+- prominence_m — prominence (meters)
+- key_col_ft - lowest point of necessary descent from a peak before one could climb to a higher one (defining prominence) (feet)
+- key_col_m - key col (meters)
+- prominence_ratio — the fraction of a peak’s elevation represented by its prominence, indicating how independently it rises above surrounding terrain (values near 1 = highly independent; near 0 = less independent)
+```
+
+> **Source:** [Northeast "115" 4000-footers](https://www.peakbagger.com/list.aspx?lid=511&pt=prom&hu=0&w=0&u=ft) <br>
+> **Inspiration:** [Ridgeline plot with inside plot and annotations](https://r-graph-gallery.com/web-ridgeline-plot-with-inside-plot-and-annotations.html) <br>
+
+### Environment
+
+```{r}
+#| label: environment
+#| message: false
+#| warning: false
+
+# Load required libraries
+library(tidytuesdayR)
+library(tidyverse)
+library(here)
+library(rvest)
+library(janitor)
+library(camcorder) # not supported in Positron
+library(ggridges)
+library(lalaland) # La La Land color palettes for viz
+source("scripts/viz_aesthetics.R") # personal aesthetics
+source("scripts/mcc.R") # "makeshift camcorder (mcc)" - custom {camcorder} imitation for Positron
+```
+
+### Import Peaks Data
+
+```{r}
+#| label: peaks data
+#| message: false
+#| warning: false
+
+# save the html to repo
+# https://www.peakbagger.com/list.aspx?lid=511&pt=prom&hu=0&w=0&u=ft (english units)
+# https://www.peakbagger.com/list.aspx?lid=511&pt=prom&hu=0&w=0&u=m (metric units)
+
+# point to html for scraping peaks table
+html_path_ft <- here("challenges", "2026", "2026-01-11_01_Northeast_115_4000-footers", "data", "peakbagger_ne115_4000_ft.html")
+html_path_m <- here("challenges", "2026", "2026-01-11_01_Northeast_115_4000-footers", "data", "peakbagger_ne115_4000_m.html")
+
+# helper function to extract mountains with both metrics from saved html files
+get_peaks_df <- function(html_path) {
+
+  # read saved html file
+  page <- read_html(html_path)
+  
+  # extract all table elements
+  tables <- page %>% html_elements("table")
+  
+  # convert tables to dfs
+  tbl_list <- map(tables, html_table)
+  
+  # select target table by index
+  peaks_raw <- tbl_list[[5]] # index 5 points to 5th table element on page, which holds the peaks data
+  
+  # clean column names for tidy workflows
+  peaks <- peaks_raw %>% clean_names()
+  
+  # return tibble
+  peaks
+}
+
+# extract peaks dfs
+peaks_ft <- get_peaks_df(html_path = here("challenges", "2026", "2026-01-11_01_Northeast_115_4000-footers", "data", "peakbagger_ne115_4000_ft.html"))
+peaks_m <- get_peaks_df(html_path = here("challenges", "2026", "2026-01-11_01_Northeast_115_4000-footers", "data", "peakbagger_ne115_4000_m.html"))
+```
+
+<!-- WRANGLING & ANALYSIS -->
+
+## Analysis
+---
+### Cleaning
+
+```{r}
+#| label: cleaning
+#| echo: true
+#| message: false
+#| warning: false
+
+# clean and prepare the data
+ne115 <- peaks_ft %>%
+  left_join(peaks_m, by = c("rank", "peak", "state")) %>% # join english and metric dfs
+  mutate(
+    range = coalesce(range_level_5.x, range_level_5.y), # same in both dfs
+    ascents = coalesce(ascents.x, ascents.y), # same in both dfs
+    key_col_ft = elev_ft - prom_ft,
+    key_col_m = elev_m - prom_m,
+    prominence_ratio = prom_ft / elev_ft,   # % of elevation that is "independent"
+    ) %>%
+  group_by(state) %>%
+  mutate(rank_state = min_rank(desc(elev_ft))) %>% # in-state rank
+  ungroup() %>%
+  group_by(range) %>%
+  mutate(rank_range = min_rank(desc(elev_ft))) %>% # in-range rank
+  ungroup() %>%
+  rename(
+    rank_ne = rank, # rank by elevation across ne
+    elevation_ft = elev_ft, # informativity
+    elevation_m = elev_m,
+    prominence_ft = prom_ft,
+    prominence_m = prom_m
+  ) %>%
+  select(
+    peak, # reordering more intuitively :)
+    rank_ne,
+    rank_state,
+    rank_range,
+    state,
+    range,
+    ascents,
+    elevation_ft,
+    elevation_m,
+    prominence_ft,
+    prominence_m,
+    key_col_ft,
+    key_col_m,
+    prominence_ratio
+  )
+
+# save ne115 df
+write_csv(ne115, here("challenges", "2026", "2026-01-11_01_Northeast_115_4000-footers", "data","ne115_4000s.csv"))
+```
+
+## Visualization
+---
+
+```{r}
+#| label: main visualization
+#| fig-width: 12
+#| fig-height: 8
+#| warning: false
+
+source("scripts/mcc.R")
+
+
+# initialize makeshift camcorder
+init_mcc(
+  dir = here("challenges","2026","2026-01-11_01_Northeast_115_4000-footers","viz","gif","frames"),
+  prefix = "ne115",
+  width = 14,
+  height = 12,
+  dpi = 300
+)
+
+# create the main visualization
+
+( # open parens for mcc
+
+ggplot(ne115, aes(x = elevation_ft, y = state)) +
+  geom_density_ridges() +
+
+) %>% # close parens for mcc
+
+  # resize_frame(width = 14, height = 12) %>%
+  save_frame() # save plot with makeshift camcorder
+
+# stop makeshift camcorder to stitch plotting gif
+stop_mcc(gif_name = "ne115.gif")
+```
+
+<!-- VISUALIZATION & COMMENTARY -->
+
+## Technical Summary
+---
+- **Data Source**: [Characteristics of Adirondack Hiking Trails (Key2STATS)](https://www.key2stats.com/data-set/view/835)
+- **Analysis Date**: 2026-01-11
+- **Tools Used**: R, ggplot2, tidyverse
+- **Key Libraries**: ggplot2, dplyr, tidyr
+
+## Vizualization
+---
+![]({IMAGE_FILE})
+
+## Future Directions
+---
+- [POTENTIAL_IMPROVEMENTS]
+- [FUTURE_ANALYSIS_IDEAS]
+- [DATA_QUALITY_NOTES]
+
+<!-- CITATIONS -->
+
+## TidyTuesday
+---
+> **Official Tidy Tuesday Repository**: [tidytuesday](https://github.com/rfordatascience/tidytuesday) <br>
+> **{tidytuesdayR} Package Repository**: [tidytuesdayR](https://github.com/dslc-io/tidytuesdayR) <br>
+> **CRAN Package**: [CRAN: Package tidytuesdayR](https://CRAN.R-project.org/package=tidytuesdayR) <br>
+> **References** @tidytuesday, @tidytuesdayR

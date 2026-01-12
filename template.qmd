@@ -2,7 +2,7 @@
 title: "{{TITLE}}"
 subtitle: "TidyTuesday {{DATE}}"
 date: "{{DATE}}"
-author: "Aaron Wright"
+author: "Aaron Wright [`aawva@mit.edu`]"
 categories: [{{LANGUAGE}}, {{CATEGORIES}}]
 image: "{{IMAGE_FILE}}"
 ---
@@ -44,6 +44,8 @@ a:hover {
 
 ## Overview
 ---
+**Research Question:** {{RESEARCH_QUESTION}}
+
 This week's TidyTuesday challenge focused on [DATASET_DESCRIPTION]. I explored [KEY_INSIGHTS] using {{LANGUAGE}} to [VISUALIZATION_APPROACH], asking [RESEARCH_QUESTION]
 
 > **Key Libraries**: {{KEY_LIBRARIES}} <br>
@@ -57,9 +59,9 @@ The dataset for this week included [DATASET_FEATURES].
 > **Source:** [Info](Link) <br>
 > **Article:** [Info](Link) <br>
 
-### Import
+### Environment
 ```{{{LANGUAGE_CODE}}}
-#| label: load-data
+#| label: environment
 #| message: false
 #| warning: false
 
@@ -68,17 +70,18 @@ The dataset for this week included [DATASET_FEATURES].
 library(tidytuesdayR)
 library(tidyverse)
 library(here)
+library(camcorder)
 import pydytuesday
 
 # Get data
 {{GET_DATA}}
 
 # R
-source("load_tidytuesday_data.R")
+source("scripts/load_tidytuesday_data.R")
 tidytuesday_data <- prepare_tidytuesday_data("{{DATE}}")
 
 # python
-from load_tidytuesday_data import prepare_tidytuesday_data
+from scripts/load_tidytuesday_data import prepare_tidytuesday_data
 data = prepare_tidytuesday_data("{{DATE}}")
 
 ```
@@ -105,11 +108,35 @@ data = prepare_tidytuesday_data("{{DATE}}")
 {{DATA_PREPARATION}}
 ```
 
-## Plotting
+## Visualization
 ---
 
 ```{{{LANGUAGE_CODE}}}
-#| label: main-plot
+#| label: camcorder start
+#| include: false
+
+# initialize camcorder for plotting gif (r)
+gg_record(
+  dir = here("challenges", "YEAR", "FOLDER", "viz", "gif"), # where to save the recording (folder)
+  device = "png", # device to use to save images
+  width = 4,      # width of saved image
+  height = 6,     # height of saved image
+  units = "in",   # units for width and height
+  dpi = 300       # dpi to use when saving image
+)
+
+# initialize makeshift camcorder (if using positron)
+init_mcc(
+  dir = here("challenges","YEAR","FOLDER","viz","gif","frames"),
+  prefix = "ne115",
+  width = 14,
+  height = 12,
+  dpi = 300
+)
+```
+
+```{{{LANGUAGE_CODE}}}
+#| label: visualization
 #| fig-width: 12
 #| fig-height: 8
 #| warning: false
@@ -117,6 +144,23 @@ data = prepare_tidytuesday_data("{{DATE}}")
 # Create the main visualization
 {{MAIN_VISUALIZATION}}
 ```
+
+```{{{LANGUAGE_CODE}}}
+#| label: camcorder end
+#| include: false
+
+# render camcorder gif (r)
+gg_playback(
+  name = here("challenges", "YEAR", "FOLDER", "viz", "gif", "gif.gif"), # name to save the .gif
+  first_image_duration = 5,
+  last_image_duration = 15,
+  frame_duration = .4
+)
+
+# stop makeshift camcorder to stitch plotting gif (if using positron)
+stop_mcc(gif_name = "gif.gif")
+```
+
 <!-- VISUALIZATION & COMMENTARY -->
 
 ## Technical Summary
