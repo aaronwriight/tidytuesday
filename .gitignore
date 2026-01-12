@@ -49,4 +49,5 @@ Thumbs.db
 *.log_freeze/
 
 # unpublished challenges
-/challenges/2026/2026-01-11*
+/challenges/2026/2026-01-11_01_Northeast_115_4000-footers/
+/challenges/2026/2026-01-11*/
