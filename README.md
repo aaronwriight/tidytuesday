@@ -16,7 +16,7 @@ My contributions to the [#TidyTuesday challenge](https://github.com/rfordatascie
   <summary>Contributions in chronological order (click to expand)</summary>
 
 <!-- toc -->
-* **Challenges 2025**
+* **Challenges 2026**
   - _No contributions yet — stay tuned!_
 
 <!-- tocstop -->

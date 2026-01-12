@@ -47,3 +47,6 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.log_freeze/
+
+# unpublished challenges
+/challenges/2026/2026-01-11*
