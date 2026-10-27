@@ -6,7 +6,7 @@ A collection of visualizations for Tidy Tuesdays, built as a Quarto website with
 
 ## Website
 
-Visit the live gallery on my personal website [here](https://aaronwriight.github.io/tidy_tuesday/).
+Visit the live gallery on my personal website [here](https://aaronwriight.com/cognitive-science/projects/tidy-tuesday).
 
 ## Contributions
 

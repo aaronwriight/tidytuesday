@@ -13,7 +13,7 @@ website:
       - href: about.qmd
         text: about
       - text: "↩"
-        href: https://aaronwriight.github.io/
+        href: https://aaronwriight.com/
     
     tools:
       - icon: github
